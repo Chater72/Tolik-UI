@@ -61,7 +61,9 @@ function TolikUI:CreateWindow(options)
     sg.ResetOnSpawn = false
     sg.Parent = pg
 
+    ------------------------------
     -- Иконка (двигается)
+    ------------------------------
     local IconWrapper = Instance.new("Frame")
     IconWrapper.Size = UDim2.new(0, 64, 0, 64)
     IconWrapper.Position = UDim2.new(0.05, 0, 0.85, 0)
@@ -72,7 +74,7 @@ function TolikUI:CreateWindow(options)
     local Icon = Instance.new("ImageButton")
     Icon.Size = UDim2.new(1, 0, 1, 0)
     Icon.BackgroundTransparency = 1
-    Icon.Image = "rbxassetid://104955007759633"  -- твоя иконка
+    Icon.Image = "rbxassetid://104955007759633"
     Icon.Parent = IconWrapper
 
     local IconCorner = Instance.new("UICorner")
@@ -85,38 +87,40 @@ function TolikUI:CreateWindow(options)
     IconStroke.Thickness = 3
     IconStroke.Parent = Icon
 
-    -- Перетаскивание иконки
-    local draggingIcon = false
-    local dragStartIcon
-    local startPosIcon
+    -- Drag для иконки
+    local iconDragging = false
+    local iconDragStart
+    local iconStartPos
     local dragThreshold = 6
 
     Icon.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            draggingIcon = false
-            dragStartIcon = input.Position
-            startPosIcon = IconWrapper.Position
+            iconDragging = false
+            iconDragStart = input.Position
+            iconStartPos = IconWrapper.Position
         end
     end)
 
     UIS.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement and dragStartIcon then
-            local delta = input.Position - dragStartIcon
+        if input.UserInputType == Enum.UserInputType.MouseMovement and iconDragStart then
+            local delta = input.Position - iconDragStart
             if delta.Magnitude > dragThreshold then
-                draggingIcon = true
+                iconDragging = true
             end
-            if draggingIcon then
+            if iconDragging then
                 IconWrapper.Position = UDim2.new(
-                    startPosIcon.X.Scale,
-                    startPosIcon.X.Offset + delta.X,
-                    startPosIcon.Y.Scale,
-                    startPosIcon.Y.Offset + delta.Y
+                    iconStartPos.X.Scale,
+                    iconStartPos.X.Offset + delta.X,
+                    iconStartPos.Y.Scale,
+                    iconStartPos.Y.Offset + delta.Y
                 )
             end
         end
     end)
 
+    ------------------------------
     -- Главное окно
+    ------------------------------
     local Main = Instance.new("Frame")
     Main.Size = UDim2.new(0, 760, 0, 580)
     Main.Position = UDim2.new(0.5, -380, 0.5, -290)
@@ -127,33 +131,19 @@ function TolikUI:CreateWindow(options)
     Main.Parent = sg
 
     local opened = false
-    local toggleMain
-
-    toggleMain = function()
+    local function toggleMain()
         opened = not opened
         Main.Visible = opened
     end
 
+    IconWrapper.MouseButton1Click:Connect(function()
+        if not iconDragging then
+            toggleMain()
+        end
+    end)
+
     IconWrapper.ZIndex = 50
     Icon.ZIndex = 51
-
-    IconWrapper.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragStartIcon = input.Position
-            startPosIcon = IconWrapper.Position
-            draggingIcon = false
-        end
-    end)
-
-    IconWrapper.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            if not draggingIcon then
-                toggleMain()
-            end
-            dragStartIcon = nil
-            draggingIcon = false
-        end
-    end)
 
     local MainCorner = Instance.new("UICorner")
     MainCorner.CornerRadius = UDim.new(0, 20)
@@ -176,16 +166,16 @@ function TolikUI:CreateWindow(options)
     TopCorner.CornerRadius = UDim.new(0, 20)
     TopCorner.Parent = Topbar
 
-    local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, -100, 1, 0)
-    Title.Position = UDim2.new(0, 24, 0, 0)
-    Title.BackgroundTransparency = 1
-    Title.Text = title
-    Title.TextColor3 = Color3.fromRGB(220, 230, 255)
-    Title.Font = Enum.Font.GothamBlack
-    Title.TextSize = 20
-    Title.TextXAlignment = Enum.TextXAlignment.Left
-    Title.Parent = Topbar
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Size = UDim2.new(1, -100, 1, 0)
+    TitleLabel.Position = UDim2.new(0, 24, 0, 0)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Text = title
+    TitleLabel.TextColor3 = Color3.fromRGB(220, 230, 255)
+    TitleLabel.Font = Enum.Font.GothamBlack
+    TitleLabel.TextSize = 20
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.Parent = Topbar
 
     local CloseBtn = Instance.new("TextButton")
     CloseBtn.Size = UDim2.new(0, 14, 0, 14)
@@ -203,8 +193,12 @@ function TolikUI:CreateWindow(options)
         sg:Destroy()
     end)
 
-    -- Перетаскивание окна
-    local windowDragging, windowDragStart, windowStartPos, dragInput
+    -- Drag окна
+    local windowDragging = false
+    local windowDragStart
+    local windowStartPos
+    local dragInput
+
     Topbar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             windowDragging = true
@@ -236,7 +230,9 @@ function TolikUI:CreateWindow(options)
         end
     end)
 
-    -- Sidebar
+    ------------------------------
+    -- Sidebar и Content
+    ------------------------------
     local Sidebar = Instance.new("Frame")
     Sidebar.Size = UDim2.new(0, 220, 1, -54)
     Sidebar.Position = UDim2.new(0, 0, 0, 54)
@@ -256,7 +252,6 @@ function TolikUI:CreateWindow(options)
     TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
     TabLayout.Parent = TabScroll
 
-    -- Content
     local Content = Instance.new("Frame")
     Content.Size = UDim2.new(1, -220, 1, -54)
     Content.Position = UDim2.new(0, 220, 0, 54)
@@ -321,6 +316,7 @@ function TolikUI:CreateWindow(options)
         tabBtn.MouseButton1Click:Connect(activate)
         if not CurrentTab then activate() end
 
+        -- Кнопка
         function tab:Button(name, callback)
             local btn = Instance.new("TextButton")
             btn.Size = UDim2.new(1, -40, 0, 50)
@@ -338,6 +334,7 @@ function TolikUI:CreateWindow(options)
             end)
         end
 
+        -- Toggle
         function tab:Toggle(name, default, callback)
             local tog = Instance.new("TextButton")
             tog.Size = UDim2.new(1, -40, 0, 50)
@@ -359,6 +356,7 @@ function TolikUI:CreateWindow(options)
             end)
         end
 
+        -- Slider
         function tab:Slider(name, min, max, default, callback)
             local slider = Instance.new("Frame")
             slider.Size = UDim2.new(1, -40, 0, 60)
@@ -428,76 +426,5 @@ function TolikUI:CreateWindow(options)
         return tab
     end
 
+    ------------------------------
     -- Key System
-    if keySystem then
-        local KeyWindow = Instance.new("Frame")
-        KeyWindow.Size = UDim2.new(0, 300, 0, 180)
-        KeyWindow.Position = UDim2.new(0.5, -150, 0.5, -90)
-        KeyWindow.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-        KeyWindow.BorderSizePixel = 0
-        KeyWindow.Parent = sg
-
-        local keyCorner = Instance.new("UICorner")
-        keyCorner.CornerRadius = UDim.new(0, 12)
-        keyCorner.Parent = KeyWindow
-
-        local keyTitle = Instance.new("TextLabel")
-        keyTitle.Size = UDim2.new(1, 0, 0, 40)
-        keyTitle.BackgroundTransparency = 1
-        keyTitle.Text = "Введи ключ"
-        keyTitle.TextColor3 = Color3.new(1,1,1)
-        keyTitle.Font = Enum.Font.GothamBold
-        keyTitle.TextSize = 20
-        keyTitle.Parent = KeyWindow
-
-        local keyInput = Instance.new("TextBox")
-        keyInput.Size = UDim2.new(1, -40, 0, 40)
-        keyInput.Position = UDim2.new(0, 20, 0, 50)
-        keyInput.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-        keyInput.Text = ""
-        keyInput.PlaceholderText = "1234..."
-        keyInput.TextColor3 = Color3.new(1,1,1)
-        keyInput.Font = Enum.Font.Gotham
-        keyInput.TextSize = 16
-        keyInput.Parent = KeyWindow
-
-        local inputCorner = Instance.new("UICorner")
-        inputCorner.CornerRadius = UDim.new(0, 8)
-        inputCorner.Parent = keyInput
-
-        local submitBtn = Instance.new("TextButton")
-        submitBtn.Size = UDim2.new(1, -40, 0, 40)
-        submitBtn.Position = UDim2.new(0, 20, 0, 100)
-        submitBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-        submitBtn.Text = "Войти"
-        submitBtn.TextColor3 = Color3.new(1,1,1)
-        submitBtn.Font = Enum.Font.GothamBold
-        submitBtn.TextSize = 16
-        submitBtn.Parent = KeyWindow
-
-        local btnCorner = Instance.new("UICorner")
-        btnCorner.CornerRadius = UDim.new(0, 8)
-        btnCorner.Parent = submitBtn
-
-        submitBtn.MouseButton1Click:Connect(function()
-            if keyInput.Text == correctKey then
-                KeyWindow:Destroy()
-                IconWrapper.Visible = true
-                opened = true
-                Main.Visible = true
-                ShowNotify(sg, welcome, 5)
-            else
-                ShowNotify(sg, "Неверный ключ!", 3)
-            end
-        end)
-    else
-        IconWrapper.Visible = true
-        opened = true
-        Main.Visible = true
-        ShowNotify(sg, welcome, 5)
-    end
-
-    return window
-end
-
-return TolikUI
