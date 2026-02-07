@@ -7,6 +7,7 @@ local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local pg = player:WaitForChild("PlayerGui")
 
+-- Уведомление
 local function ShowNotify(sg, text, duration)
     duration = duration or 4
     local notify = Instance.new("TextLabel")
@@ -19,14 +20,17 @@ local function ShowNotify(sg, text, duration)
     notify.TextSize = 16
     notify.TextWrapped = true
     notify.Parent = sg
+
     local nC = Instance.new("UICorner")
     nC.CornerRadius = UDim.new(0, 14)
     nC.Parent = notify
+
     local nStroke = Instance.new("UIStroke")
     nStroke.Color = Color3.fromRGB(80, 140, 255)
     nStroke.Transparency = 0.5
     nStroke.Thickness = 2
     nStroke.Parent = notify
+
     notify.BackgroundTransparency = 1
     notify.TextTransparency = 1
     TS:Create(notify, TweenInfo.new(0.5), {
@@ -57,75 +61,71 @@ function TolikUI:CreateWindow(options)
     sg.ResetOnSpawn = false
     sg.Parent = pg
 
-    local OpenBtnWrapper = Instance.new("Frame")
-    OpenBtnWrapper.Size = UDim2.new(0, 64, 0, 64)
-    OpenBtnWrapper.Position = UDim2.new(0.05, 0, 0.85, 0)
-    OpenBtnWrapper.BackgroundTransparency = 1
-    OpenBtnWrapper.Parent = sg
+    -- Иконка (двигается)
+    local IconWrapper = Instance.new("Frame")
+    IconWrapper.Size = UDim2.new(0, 64, 0, 64)
+    IconWrapper.Position = UDim2.new(0.05, 0, 0.85, 0)
+    IconWrapper.BackgroundTransparency = 1
+    IconWrapper.Parent = sg
 
-    local OpenBtn = Instance.new("ImageButton")
-    OpenBtn.Size = UDim2.new(1, 0, 1, 0)
-    OpenBtn.BackgroundTransparency = 1
-    OpenBtn.Image = "rbxassetid://104955007759633"
-    OpenBtn.Parent = OpenBtnWrapper
+    local Icon = Instance.new("ImageButton")
+    Icon.Size = UDim2.new(1, 0, 1, 0)
+    Icon.BackgroundTransparency = 1
+    Icon.Image = "rbxassetid://104955007759633"  -- твоя иконка
+    Icon.Parent = IconWrapper
 
-    local OpenCorner = Instance.new("UICorner")
-    OpenCorner.CornerRadius = UDim.new(1, 0)
-    OpenCorner.Parent = OpenBtn
+    local IconCorner = Instance.new("UICorner")
+    IconCorner.CornerRadius = UDim.new(1, 0)
+    IconCorner.Parent = Icon
 
-    local OpenStroke = Instance.new("UIStroke")
-    OpenStroke.Color = Color3.fromRGB(140, 220, 255)
-    OpenStroke.Transparency = 0.3
-    OpenStroke.Thickness = 3
-    OpenStroke.Parent = OpenBtn
+    local IconStroke = Instance.new("UIStroke")
+    IconStroke.Color = Color3.fromRGB(140, 220, 255)
+    IconStroke.Transparency = 0.3
+    IconStroke.Thickness = 3
+    IconStroke.Parent = Icon
 
-    local obDragging, obDragInput, obDragStart, obStartPos
-    OpenBtnWrapper.InputBegan:Connect(function(input)
+    -- Перетаскивание иконки
+    local iDragging, iDragInput, iDragStart, iStartPos
+    IconWrapper.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            obDragging = true
-            obDragStart = input.Position
-            obStartPos = OpenBtnWrapper.Position
+            iDragging = true
+            iDragStart = input.Position
+            iStartPos = IconWrapper.Position
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    obDragging = false
-                end
+                if input.UserInputState == Enum.UserInputState.End then iDragging = false end
             end)
         end
     end)
 
-    OpenBtnWrapper.InputChanged:Connect(function(input)
+    IconWrapper.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            obDragInput = input
+            iDragInput = input
         end
     end)
 
     UIS.InputChanged:Connect(function(input)
-        if input == obDragInput and obDragging then
-            local delta = input.Position - obDragStart
-            OpenBtnWrapper.Position = UDim2.new(
-                obStartPos.X.Scale,
-                obStartPos.X.Offset + delta.X,
-                obStartPos.Y.Scale,
-                obStartPos.Y.Offset + delta.Y
-            )
+        if input == iDragInput and iDragging then
+            local delta = input.Position - iDragStart
+            IconWrapper.Position = UDim2.new(iStartPos.X.Scale, iStartPos.X.Offset + delta.X, iStartPos.Y.Scale, iStartPos.Y.Offset + delta.Y)
         end
     end)
 
-    OpenBtn.MouseEnter:Connect(function()
-        TS:Create(OpenStroke, TweenInfo.new(0.3), {Transparency = 0.1}):Play()
+    Icon.MouseEnter:Connect(function()
+        TS:Create(IconStroke, TweenInfo.new(0.3), {Transparency = 0.1}):Play()
     end)
 
-    OpenBtn.MouseLeave:Connect(function()
-        TS:Create(OpenStroke, TweenInfo.new(0.3), {Transparency = 0.3}):Play()
+    Icon.MouseLeave:Connect(function()
+        TS:Create(IconStroke, TweenInfo.new(0.3), {Transparency = 0.3}):Play()
     end)
 
+    -- Главное окно (скрыто до ввода ключа)
     local Main = Instance.new("Frame")
     Main.Size = UDim2.new(0, 760, 0, 580)
     Main.Position = UDim2.new(0.5, -380, 0.5, -290)
     Main.BackgroundColor3 = Color3.fromRGB(10, 10, 16)
     Main.BorderSizePixel = 0
     Main.ClipsDescendants = true
-    Main.Visible = false
+    Main.Visible = false  -- скрыто до ключа
     Main.Parent = sg
 
     local MainCorner = Instance.new("UICorner")
@@ -138,6 +138,7 @@ function TolikUI:CreateWindow(options)
     MainStroke.Thickness = 2.2
     MainStroke.Parent = Main
 
+    -- Topbar
     local Topbar = Instance.new("Frame")
     Topbar.Size = UDim2.new(1, 0, 0, 54)
     Topbar.BackgroundColor3 = Color3.fromRGB(14, 14, 24)
@@ -175,11 +176,6 @@ function TolikUI:CreateWindow(options)
         sg:Destroy()
     end)
 
-    -- Открытие/закрытие
-    OpenBtn.MouseButton1Click:Connect(function()
-        Main.Visible = not Main.Visible
-    end)
-
     -- Перетаскивание окна
     local dragging, dragInput, dragStart, startPos
     Topbar.InputBegan:Connect(function(input)
@@ -188,17 +184,13 @@ function TolikUI:CreateWindow(options)
             dragStart = input.Position
             startPos = Main.Position
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
             end)
         end
     end)
 
     Topbar.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
+        if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
     end)
 
     UIS.InputChanged:Connect(function(input)
@@ -208,78 +200,12 @@ function TolikUI:CreateWindow(options)
         end
     end)
 
-    -- Key System
-    if keySystem then
-        local KeyWindow = Instance.new("Frame")
-        KeyWindow.Size = UDim2.new(0, 300, 0, 180)
-        KeyWindow.Position = UDim2.new(0.5, -150, 0.5, -90)
-        KeyWindow.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-        KeyWindow.Parent = sg
-
-        local keyCorner = Instance.new("UICorner")
-        keyCorner.CornerRadius = UDim.new(0, 12)
-        keyCorner.Parent = KeyWindow
-
-        local keyTitle = Instance.new("TextLabel")
-        keyTitle.Size = UDim2.new(1, 0, 0, 40)
-        keyTitle.BackgroundTransparency = 1
-        keyTitle.Text = "Введи ключ"
-        keyTitle.TextColor3 = Color3.new(1,1,1)
-        keyTitle.Font = Enum.Font.GothamBold
-        keyTitle.TextSize = 20
-        keyTitle.Parent = KeyWindow
-
-        local keyInput = Instance.new("TextBox")
-        keyInput.Size = UDim2.new(1, -40, 0, 40)
-        keyInput.Position = UDim2.new(0, 20, 0, 50)
-        keyInput.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-        keyInput.Text = ""
-        keyInput.PlaceholderText = "1234..."
-        keyInput.TextColor3 = Color3.new(1,1,1)
-        keyInput.Font = Enum.Font.Gotham
-        keyInput.TextSize = 16
-        keyInput.Parent = KeyWindow
-
-        local inputCorner = Instance.new("UICorner")
-        inputCorner.CornerRadius = UDim.new(0, 8)
-        inputCorner.Parent = keyInput
-
-        local submitBtn = Instance.new("TextButton")
-        submitBtn.Size = UDim2.new(1, -40, 0, 40)
-        submitBtn.Position = UDim2.new(0, 20, 0, 100)
-        submitBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-        submitBtn.Text = "Войти"
-        submitBtn.TextColor3 = Color3.new(1,1,1)
-        submitBtn.Font = Enum.Font.GothamBold
-        submitBtn.TextSize = 16
-        submitBtn.Parent = KeyWindow
-
-        local btnCorner = Instance.new("UICorner")
-        btnCorner.CornerRadius = UDim.new(0, 8)
-        btnCorner.Parent = submitBtn
-
-        submitBtn.MouseButton1Click:Connect(function()
-            if keyInput.Text == correctKey then
-                KeyWindow:Destroy()
-                Main.Visible = true
-                ShowNotify(sg, welcome, 5)
-            else
-                ShowNotify(sg, "Неверный ключ!", 3)
-            end
-        end)
-    else
-        Main.Visible = true
-        ShowNotify(sg, welcome, 5)
-    end
-
-    function window:Notify(text, duration)
-        ShowNotify(sg, text, duration)
-    end
-
+    -- Sidebar (вкладки слева)
     local Sidebar = Instance.new("Frame")
     Sidebar.Size = UDim2.new(0, 220, 1, -54)
     Sidebar.Position = UDim2.new(0, 0, 0, 54)
     Sidebar.BackgroundColor3 = Color3.fromRGB(14, 14, 22)
+    Sidebar.BorderSizePixel = 0
     Sidebar.Parent = Main
 
     local TabScroll = Instance.new("ScrollingFrame")
@@ -294,6 +220,7 @@ function TolikUI:CreateWindow(options)
     TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
     TabLayout.Parent = TabScroll
 
+    -- Content (область для элементов)
     local Content = Instance.new("Frame")
     Content.Size = UDim2.new(1, -220, 1, -54)
     Content.Position = UDim2.new(0, 220, 0, 54)
@@ -342,10 +269,16 @@ function TolikUI:CreateWindow(options)
         local function activate()
             if CurrentTab then
                 CurrentTab.content.Visible = false
-                TS:Create(CurrentTab.btn, TweenInfo.new(0.35), {BackgroundColor3 = Color3.fromRGB(22, 22, 34), TextColor3 = Color3.fromRGB(180, 190, 220)}):Play()
+                TS:Create(CurrentTab.btn, TweenInfo.new(0.35), {
+                    BackgroundColor3 = Color3.fromRGB(22, 22, 34),
+                    TextColor3 = Color3.fromRGB(180, 190, 220)
+                }):Play()
             end
             tabContent.Visible = true
-            TS:Create(tabBtn, TweenInfo.new(0.35), {BackgroundColor3 = Color3.fromRGB(60, 100, 200), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+            TS:Create(tabBtn, TweenInfo.new(0.35), {
+                BackgroundColor3 = Color3.fromRGB(60, 100, 200),
+                TextColor3 = Color3.fromRGB(255, 255, 255)
+            }):Play()
             CurrentTab = {btn = tabBtn, content = tabContent}
         end
 
@@ -364,7 +297,9 @@ function TolikUI:CreateWindow(options)
             local c = Instance.new("UICorner")
             c.CornerRadius = UDim.new(0, 10)
             c.Parent = btn
-            btn.MouseButton1Click:Connect(callback or function() end)
+            btn.MouseButton1Click:Connect(function()
+                if callback then callback() end
+            end)
         end
 
         function tab:Toggle(name, default, callback)
@@ -437,14 +372,10 @@ function TolikUI:CreateWindow(options)
             valueLabel.Parent = slider
             local sliding = false
             knob.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    sliding = true
-                end
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then sliding = true end
             end)
             UIS.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    sliding = false
-                end
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then sliding = false end
             end)
             UIS.InputChanged:Connect(function(input)
                 if sliding and input.UserInputType == Enum.UserInputType.MouseMovement then
@@ -459,6 +390,71 @@ function TolikUI:CreateWindow(options)
         end
 
         return tab
+    end
+
+    -- Key System
+    if keySystem then
+        local KeyWindow = Instance.new("Frame")
+        KeyWindow.Size = UDim2.new(0, 300, 0, 180)
+        KeyWindow.Position = UDim2.new(0.5, -150, 0.5, -90)
+        KeyWindow.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+        KeyWindow.BorderSizePixel = 0
+        KeyWindow.Parent = sg
+
+        local keyCorner = Instance.new("UICorner")
+        keyCorner.CornerRadius = UDim.new(0, 12)
+        keyCorner.Parent = KeyWindow
+
+        local keyTitle = Instance.new("TextLabel")
+        keyTitle.Size = UDim2.new(1, 0, 0, 40)
+        keyTitle.BackgroundTransparency = 1
+        keyTitle.Text = "Введи ключ"
+        keyTitle.TextColor3 = Color3.new(1,1,1)
+        keyTitle.Font = Enum.Font.GothamBold
+        keyTitle.TextSize = 20
+        keyTitle.Parent = KeyWindow
+
+        local keyInput = Instance.new("TextBox")
+        keyInput.Size = UDim2.new(1, -40, 0, 40)
+        keyInput.Position = UDim2.new(0, 20, 0, 50)
+        keyInput.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+        keyInput.Text = ""
+        keyInput.PlaceholderText = "1234..."
+        keyInput.TextColor3 = Color3.new(1,1,1)
+        keyInput.Font = Enum.Font.Gotham
+        keyInput.TextSize = 16
+        keyInput.Parent = KeyWindow
+
+        local inputCorner = Instance.new("UICorner")
+        inputCorner.CornerRadius = UDim.new(0, 8)
+        inputCorner.Parent = keyInput
+
+        local submitBtn = Instance.new("TextButton")
+        submitBtn.Size = UDim2.new(1, -40, 0, 40)
+        submitBtn.Position = UDim2.new(0, 20, 0, 100)
+        submitBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+        submitBtn.Text = "Войти"
+        submitBtn.TextColor3 = Color3.new(1,1,1)
+        submitBtn.Font = Enum.Font.GothamBold
+        submitBtn.TextSize = 16
+        submitBtn.Parent = KeyWindow
+
+        local btnCorner = Instance.new("UICorner")
+        btnCorner.CornerRadius = UDim.new(0, 8)
+        btnCorner.Parent = submitBtn
+
+        submitBtn.MouseButton1Click:Connect(function()
+            if keyInput.Text == correctKey then
+                KeyWindow:Destroy()
+                Main.Visible = true
+                ShowNotify(sg, welcome, 5)
+            else
+                ShowNotify(sg, "Неверный ключ!", 3)
+            end
+        end)
+    else
+        Main.Visible = true
+        ShowNotify(sg, welcome, 5)
     end
 
     return window
