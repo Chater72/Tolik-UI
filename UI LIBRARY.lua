@@ -67,6 +67,7 @@ function TolikUI:CreateWindow(options)
     IconWrapper.Position = UDim2.new(0.05, 0, 0.85, 0)
     IconWrapper.BackgroundTransparency = 1
     IconWrapper.Parent = sg
+    IconWrapper.Visible = not keySystem
 
     local Icon = Instance.new("ImageButton")
     Icon.Size = UDim2.new(1, 0, 1, 0)
@@ -127,6 +128,18 @@ function TolikUI:CreateWindow(options)
     Main.ClipsDescendants = true
     Main.Visible = false  -- скрыто до ключа
     Main.Parent = sg
+    
+local opened = false
+
+local function toggleMain()
+    opened = not opened
+    Main.Visible = opened
+end
+
+IconWrapper.ZIndex = 50
+Icon.ZIndex = 51
+
+Icon.MouseButton1Click:Connect(toggleMain)
 
     local MainCorner = Instance.new("UICorner")
     MainCorner.CornerRadius = UDim.new(0, 20)
@@ -445,14 +458,17 @@ function TolikUI:CreateWindow(options)
 
         submitBtn.MouseButton1Click:Connect(function()
             if keyInput.Text == correctKey then
-                KeyWindow:Destroy()
-                Main.Visible = true
-                ShowNotify(sg, welcome, 5)
-            else
-                ShowNotify(sg, "Неверный ключ!", 3)
+    KeyWindow:Destroy()
+    IconWrapper.Visible = true
+    opened = true
+    Main.Visible = true
+    ShowNotify(sg, welcome, 5)
+
             end
         end)
-    else
+        else
+        IconWrapper.Visible = true
+        opened = true
         Main.Visible = true
         ShowNotify(sg, welcome, 5)
     end
@@ -461,3 +477,4 @@ function TolikUI:CreateWindow(options)
 end
 
 return TolikUI
+
