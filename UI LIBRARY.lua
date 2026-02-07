@@ -66,7 +66,7 @@ function TolikUI:CreateWindow(options)
     local OpenBtn = Instance.new("ImageButton")
     OpenBtn.Size = UDim2.new(1, 0, 1, 0)
     OpenBtn.BackgroundTransparency = 1
-    OpenBtn.Image = "rbxassetid://137745684190476"
+    OpenBtn.Image = "rbxassetid://104955007759633"
     OpenBtn.Parent = OpenBtnWrapper
 
     local OpenCorner = Instance.new("UICorner")
