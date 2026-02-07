@@ -86,71 +86,74 @@ function TolikUI:CreateWindow(options)
     IconStroke.Parent = Icon
 
     -- Перетаскивание иконки
--- Профессиональный drag без ложных кликов
-local dragging = false
-local dragStart
-local startPos
-local dragThreshold = 6
+    local draggingIcon = false
+    local dragStartIcon
+    local startPosIcon
+    local dragThreshold = 6
 
-Icon.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = false
-		dragStart = input.Position
-		startPos = IconWrapper.Position
-	end
-end)
+    Icon.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            draggingIcon = false
+            dragStartIcon = input.Position
+            startPosIcon = IconWrapper.Position
+        end
+    end)
 
-UIS.InputChanged:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseMovement and dragStart then
-		local delta = input.Position - dragStart
+    UIS.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement and dragStartIcon then
+            local delta = input.Position - dragStartIcon
+            if delta.Magnitude > dragThreshold then
+                draggingIcon = true
+            end
+            if draggingIcon then
+                IconWrapper.Position = UDim2.new(
+                    startPosIcon.X.Scale,
+                    startPosIcon.X.Offset + delta.X,
+                    startPosIcon.Y.Scale,
+                    startPosIcon.Y.Offset + delta.Y
+                )
+            end
+        end
+    end)
 
-		if delta.Magnitude > dragThreshold then
-			dragging = true
-		end
-
-		if dragging then
-			IconWrapper.Position = UDim2.new(
-				startPos.X.Scale,
-				startPos.X.Offset + delta.X,
-				startPos.Y.Scale,
-				startPos.Y.Offset + delta.Y
-			)
-		end
-	end
-end)
-
-UIS.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		task.wait()
-		if not dragging then
-			toggleMain()
-		end
-		dragStart = nil
-		dragging = false
-	end
-end)
-
-
-    -- Главное окно (скрыто до ввода ключа)
+    -- Главное окно
     local Main = Instance.new("Frame")
     Main.Size = UDim2.new(0, 760, 0, 580)
     Main.Position = UDim2.new(0.5, -380, 0.5, -290)
     Main.BackgroundColor3 = Color3.fromRGB(10, 10, 16)
     Main.BorderSizePixel = 0
     Main.ClipsDescendants = true
-    Main.Visible = false  -- скрыто до ключа
+    Main.Visible = false
     Main.Parent = sg
-    
-local opened = false
 
-local function toggleMain()
-    opened = not opened
-    Main.Visible = opened
-end
+    local opened = false
+    local toggleMain
 
-IconWrapper.ZIndex = 50
-Icon.ZIndex = 51
+    toggleMain = function()
+        opened = not opened
+        Main.Visible = opened
+    end
 
+    IconWrapper.ZIndex = 50
+    Icon.ZIndex = 51
+
+    IconWrapper.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragStartIcon = input.Position
+            startPosIcon = IconWrapper.Position
+            draggingIcon = false
+        end
+    end)
+
+    IconWrapper.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if not draggingIcon then
+                toggleMain()
+            end
+            dragStartIcon = nil
+            draggingIcon = false
+        end
+    end)
 
     local MainCorner = Instance.new("UICorner")
     MainCorner.CornerRadius = UDim.new(0, 20)
@@ -200,57 +203,40 @@ Icon.ZIndex = 51
         sg:Destroy()
     end)
 
-    local opened = false
-local toggleMain
-
-
     -- Перетаскивание окна
-Topbar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        windowDragging = true
-        windowDragStart = input.Position
-        windowStartPos = Main.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                windowDragging = false
-            end
-        end)
-    end
-end)
-
-Topbar.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
-    end
-end)
-
-UIS.InputChanged:Connect(function(input)
-    if input == dragInput and windowDragging then
-        local delta = input.Position - windowDragStart
-        Main.Position = UDim2.new(
-            windowStartPos.X.Scale,
-            windowStartPos.X.Offset + delta.X,
-            windowStartPos.Y.Scale,
-            windowStartPos.Y.Offset + delta.Y
-        )
-    end
-end)
-
-
-    UIS.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    local windowDragging, windowDragStart, windowStartPos, dragInput
+    Topbar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            windowDragging = true
+            windowDragStart = input.Position
+            windowStartPos = Main.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    windowDragging = false
+                end
+            end)
         end
     end)
 
-    toggleMain = function()
-    opened = not opened
-    Main.Visible = opened
-end
+    Topbar.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
 
+    UIS.InputChanged:Connect(function(input)
+        if input == dragInput and windowDragging then
+            local delta = input.Position - windowDragStart
+            Main.Position = UDim2.new(
+                windowStartPos.X.Scale,
+                windowStartPos.X.Offset + delta.X,
+                windowStartPos.Y.Scale,
+                windowStartPos.Y.Offset + delta.Y
+            )
+        end
+    end)
 
-    -- Sidebar (вкладки слева)
+    -- Sidebar
     local Sidebar = Instance.new("Frame")
     Sidebar.Size = UDim2.new(0, 220, 1, -54)
     Sidebar.Position = UDim2.new(0, 0, 0, 54)
@@ -270,7 +256,7 @@ end
     TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
     TabLayout.Parent = TabScroll
 
-    -- Content (область для элементов)
+    -- Content
     local Content = Instance.new("Frame")
     Content.Size = UDim2.new(1, -220, 1, -54)
     Content.Position = UDim2.new(0, 220, 0, 54)
@@ -443,74 +429,75 @@ end
     end
 
     -- Key System
--- Key System
-if keySystem then
-    local KeyWindow = Instance.new("Frame")
-    KeyWindow.Size = UDim2.new(0, 300, 0, 180)
-    KeyWindow.Position = UDim2.new(0.5, -150, 0.5, -90)
-    KeyWindow.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-    KeyWindow.BorderSizePixel = 0
-    KeyWindow.Parent = sg
+    if keySystem then
+        local KeyWindow = Instance.new("Frame")
+        KeyWindow.Size = UDim2.new(0, 300, 0, 180)
+        KeyWindow.Position = UDim2.new(0.5, -150, 0.5, -90)
+        KeyWindow.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+        KeyWindow.BorderSizePixel = 0
+        KeyWindow.Parent = sg
 
-    local keyCorner = Instance.new("UICorner")
-    keyCorner.CornerRadius = UDim.new(0, 12)
-    keyCorner.Parent = KeyWindow
+        local keyCorner = Instance.new("UICorner")
+        keyCorner.CornerRadius = UDim.new(0, 12)
+        keyCorner.Parent = KeyWindow
 
-    local keyTitle = Instance.new("TextLabel")
-    keyTitle.Size = UDim2.new(1, 0, 0, 40)
-    keyTitle.BackgroundTransparency = 1
-    keyTitle.Text = "Введи ключ"
-    keyTitle.TextColor3 = Color3.new(1,1,1)
-    keyTitle.Font = Enum.Font.GothamBold
-    keyTitle.TextSize = 20
-    keyTitle.Parent = KeyWindow
+        local keyTitle = Instance.new("TextLabel")
+        keyTitle.Size = UDim2.new(1, 0, 0, 40)
+        keyTitle.BackgroundTransparency = 1
+        keyTitle.Text = "Введи ключ"
+        keyTitle.TextColor3 = Color3.new(1,1,1)
+        keyTitle.Font = Enum.Font.GothamBold
+        keyTitle.TextSize = 20
+        keyTitle.Parent = KeyWindow
 
-    local keyInput = Instance.new("TextBox")
-    keyInput.Size = UDim2.new(1, -40, 0, 40)
-    keyInput.Position = UDim2.new(0, 20, 0, 50)
-    keyInput.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-    keyInput.Text = ""
-    keyInput.PlaceholderText = "1234..."
-    keyInput.TextColor3 = Color3.new(1,1,1)
-    keyInput.Font = Enum.Font.Gotham
-    keyInput.TextSize = 16
-    keyInput.Parent = KeyWindow
+        local keyInput = Instance.new("TextBox")
+        keyInput.Size = UDim2.new(1, -40, 0, 40)
+        keyInput.Position = UDim2.new(0, 20, 0, 50)
+        keyInput.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+        keyInput.Text = ""
+        keyInput.PlaceholderText = "1234..."
+        keyInput.TextColor3 = Color3.new(1,1,1)
+        keyInput.Font = Enum.Font.Gotham
+        keyInput.TextSize = 16
+        keyInput.Parent = KeyWindow
 
-    local inputCorner = Instance.new("UICorner")
-    inputCorner.CornerRadius = UDim.new(0, 8)
-    inputCorner.Parent = keyInput
+        local inputCorner = Instance.new("UICorner")
+        inputCorner.CornerRadius = UDim.new(0, 8)
+        inputCorner.Parent = keyInput
 
-    local submitBtn = Instance.new("TextButton")
-    submitBtn.Size = UDim2.new(1, -40, 0, 40)
-    submitBtn.Position = UDim2.new(0, 20, 0, 100)
-    submitBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-    submitBtn.Text = "Войти"
-    submitBtn.TextColor3 = Color3.new(1,1,1)
-    submitBtn.Font = Enum.Font.GothamBold
-    submitBtn.TextSize = 16
-    submitBtn.Parent = KeyWindow
+        local submitBtn = Instance.new("TextButton")
+        submitBtn.Size = UDim2.new(1, -40, 0, 40)
+        submitBtn.Position = UDim2.new(0, 20, 0, 100)
+        submitBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+        submitBtn.Text = "Войти"
+        submitBtn.TextColor3 = Color3.new(1,1,1)
+        submitBtn.Font = Enum.Font.GothamBold
+        submitBtn.TextSize = 16
+        submitBtn.Parent = KeyWindow
 
-    local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 8)
-    btnCorner.Parent = submitBtn
+        local btnCorner = Instance.new("UICorner")
+        btnCorner.CornerRadius = UDim.new(0, 8)
+        btnCorner.Parent = submitBtn
 
-    submitBtn.MouseButton1Click:Connect(function()
-        if keyInput.Text == correctKey then
-            KeyWindow:Destroy()
-            IconWrapper.Visible = true
-            opened = true
-            Main.Visible = true
-            ShowNotify(sg, welcome, 5)
-        else
-            ShowNotify(sg, "Неверный ключ!", 3)
-        end
-    end)
+        submitBtn.MouseButton1Click:Connect(function()
+            if keyInput.Text == correctKey then
+                KeyWindow:Destroy()
+                IconWrapper.Visible = true
+                opened = true
+                Main.Visible = true
+                ShowNotify(sg, welcome, 5)
+            else
+                ShowNotify(sg, "Неверный ключ!", 3)
+            end
+        end)
+    else
+        IconWrapper.Visible = true
+        opened = true
+        Main.Visible = true
+        ShowNotify(sg, welcome, 5)
+    end
 
-else
-    IconWrapper.Visible = true
-    opened = true
-    Main.Visible = true
-    ShowNotify(sg, welcome, 5)
+    return window
 end
 
-
+return TolikUI
