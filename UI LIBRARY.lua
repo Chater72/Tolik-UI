@@ -44,7 +44,13 @@ local function ShowNotify(sg, text, duration)
     notify:Destroy()
 end
 
-function TolikUI:CreateWindow(title)
+function TolikUI:CreateWindow(options)
+    options = options or {}
+    local title = options.Title or "TolikUI"
+    local keySystem = options.KeySystem or false
+    local correctKey = options.CorrectKey or "1234"
+    local welcome = options.WelcomeMessage or "TolikUI загружен!"
+
     local window = {}
     local sg = Instance.new("ScreenGui")
     sg.Name = "TolikUI_" .. math.random(1000,9999)
@@ -60,7 +66,7 @@ function TolikUI:CreateWindow(title)
     local OpenBtn = Instance.new("ImageButton")
     OpenBtn.Size = UDim2.new(1, 0, 1, 0)
     OpenBtn.BackgroundTransparency = 1
-    OpenBtn.Image = "rbxassetid://104955007759633"
+    OpenBtn.Image = "rbxassetid://137745684190476"
     OpenBtn.Parent = OpenBtnWrapper
 
     local OpenCorner = Instance.new("UICorner")
@@ -119,7 +125,7 @@ function TolikUI:CreateWindow(title)
     Main.BackgroundColor3 = Color3.fromRGB(10, 10, 16)
     Main.BorderSizePixel = 0
     Main.ClipsDescendants = true
-    Main.Visible = true
+    Main.Visible = false
     Main.Parent = sg
 
     local MainCorner = Instance.new("UICorner")
@@ -142,16 +148,16 @@ function TolikUI:CreateWindow(title)
     TopCorner.CornerRadius = UDim.new(0, 20)
     TopCorner.Parent = Topbar
 
-    local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Size = UDim2.new(1, -100, 1, 0)
-    TitleLabel.Position = UDim2.new(0, 24, 0, 0)
-    TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Text = title or "TolikUI"
-    TitleLabel.TextColor3 = Color3.fromRGB(220, 230, 255)
-    TitleLabel.Font = Enum.Font.GothamBlack
-    TitleLabel.TextSize = 20
-    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    TitleLabel.Parent = Topbar
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, -100, 1, 0)
+    Title.Position = UDim2.new(0, 24, 0, 0)
+    Title.BackgroundTransparency = 1
+    Title.Text = title
+    Title.TextColor3 = Color3.fromRGB(220, 230, 255)
+    Title.Font = Enum.Font.GothamBlack
+    Title.TextSize = 20
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Parent = Topbar
 
     local CloseBtn = Instance.new("TextButton")
     CloseBtn.Size = UDim2.new(0, 14, 0, 14)
@@ -169,34 +175,15 @@ function TolikUI:CreateWindow(title)
         sg:Destroy()
     end)
 
+    -- Открытие/закрытие
     OpenBtn.MouseButton1Click:Connect(function()
-        if Main.Visible then
-            TS:Create(Main, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-                Size = UDim2.new(0, 0, 0, 0),
-                Position = UDim2.new(0.5, 0, 0.5, 0),
-                BackgroundTransparency = 1
-            }):Play()
-            task.wait(0.35)
-            Main.Visible = false
-            Main.Size = UDim2.new(0, 760, 0, 580)
-            Main.Position = UDim2.new(0.5, -380, 0.5, -290)
-            Main.BackgroundTransparency = 0
-        else
-            Main.Visible = true
-            Main.Size = UDim2.new(0, 0, 0, 0)
-            Main.Position = UDim2.new(0.5, 0, 0.5, 0)
-            Main.BackgroundTransparency = 0.4
-            TS:Create(Main, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, 760, 0, 580),
-                Position = UDim2.new(0.5, -380, 0.5, -290),
-                BackgroundTransparency = 0
-            }):Play()
-        end
+        Main.Visible = not Main.Visible
     end)
 
+    -- Перетаскивание окна
     local dragging, dragInput, dragStart, startPos
     Topbar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             dragStart = input.Position
             startPos = Main.Position
@@ -209,7 +196,7 @@ function TolikUI:CreateWindow(title)
     end)
 
     Topbar.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
             dragInput = input
         end
     end)
@@ -221,7 +208,103 @@ function TolikUI:CreateWindow(title)
         end
     end)
 
-    ShowNotify(sg, "TolikUI загружен!", 5)
+    -- Key System
+    if keySystem then
+        local KeyWindow = Instance.new("Frame")
+        KeyWindow.Size = UDim2.new(0, 300, 0, 180)
+        KeyWindow.Position = UDim2.new(0.5, -150, 0.5, -90)
+        KeyWindow.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+        KeyWindow.Parent = sg
+
+        local keyCorner = Instance.new("UICorner")
+        keyCorner.CornerRadius = UDim.new(0, 12)
+        keyCorner.Parent = KeyWindow
+
+        local keyTitle = Instance.new("TextLabel")
+        keyTitle.Size = UDim2.new(1, 0, 0, 40)
+        keyTitle.BackgroundTransparency = 1
+        keyTitle.Text = "Введи ключ"
+        keyTitle.TextColor3 = Color3.new(1,1,1)
+        keyTitle.Font = Enum.Font.GothamBold
+        keyTitle.TextSize = 20
+        keyTitle.Parent = KeyWindow
+
+        local keyInput = Instance.new("TextBox")
+        keyInput.Size = UDim2.new(1, -40, 0, 40)
+        keyInput.Position = UDim2.new(0, 20, 0, 50)
+        keyInput.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+        keyInput.Text = ""
+        keyInput.PlaceholderText = "1234..."
+        keyInput.TextColor3 = Color3.new(1,1,1)
+        keyInput.Font = Enum.Font.Gotham
+        keyInput.TextSize = 16
+        keyInput.Parent = KeyWindow
+
+        local inputCorner = Instance.new("UICorner")
+        inputCorner.CornerRadius = UDim.new(0, 8)
+        inputCorner.Parent = keyInput
+
+        local submitBtn = Instance.new("TextButton")
+        submitBtn.Size = UDim2.new(1, -40, 0, 40)
+        submitBtn.Position = UDim2.new(0, 20, 0, 100)
+        submitBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+        submitBtn.Text = "Войти"
+        submitBtn.TextColor3 = Color3.new(1,1,1)
+        submitBtn.Font = Enum.Font.GothamBold
+        submitBtn.TextSize = 16
+        submitBtn.Parent = KeyWindow
+
+        local btnCorner = Instance.new("UICorner")
+        btnCorner.CornerRadius = UDim.new(0, 8)
+        btnCorner.Parent = submitBtn
+
+        submitBtn.MouseButton1Click:Connect(function()
+            if keyInput.Text == correctKey then
+                KeyWindow:Destroy()
+                Main.Visible = true
+                ShowNotify(sg, welcome, 5)
+            else
+                ShowNotify(sg, "Неверный ключ!", 3)
+            end
+        end)
+    else
+        Main.Visible = true
+        ShowNotify(sg, welcome, 5)
+    end
+
+    function window:Notify(text, duration)
+        ShowNotify(sg, text, duration)
+    end
+
+    local Sidebar = Instance.new("Frame")
+    Sidebar.Size = UDim2.new(0, 220, 1, -54)
+    Sidebar.Position = UDim2.new(0, 0, 0, 54)
+    Sidebar.BackgroundColor3 = Color3.fromRGB(14, 14, 22)
+    Sidebar.Parent = Main
+
+    local TabScroll = Instance.new("ScrollingFrame")
+    TabScroll.Size = UDim2.new(1, 0, 1, 0)
+    TabScroll.BackgroundTransparency = 1
+    TabScroll.ScrollBarThickness = 0
+    TabScroll.Parent = Sidebar
+
+    local TabLayout = Instance.new("UIListLayout")
+    TabLayout.Padding = UDim.new(0, 12)
+    TabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    TabLayout.Parent = TabScroll
+
+    local Content = Instance.new("Frame")
+    Content.Size = UDim2.new(1, -220, 1, -54)
+    Content.Position = UDim2.new(0, 220, 0, 54)
+    Content.BackgroundTransparency = 1
+    Content.Parent = Main
+
+    local ContentPad = Instance.new("UIPadding")
+    ContentPad.PaddingLeft = UDim.new(0, 24)
+    ContentPad.PaddingRight = UDim.new(0, 24)
+    ContentPad.PaddingTop = UDim.new(0, 20)
+    ContentPad.Parent = Content
 
     local CurrentTab = nil
 
@@ -231,27 +314,25 @@ function TolikUI:CreateWindow(title)
         local tabBtn = Instance.new("TextButton")
         tabBtn.Size = UDim2.new(1, -24, 0, 52)
         tabBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 34)
-        tabBtn.BorderSizePixel = 0
         tabBtn.Text = "  " .. name
         tabBtn.TextColor3 = Color3.fromRGB(180, 190, 220)
         tabBtn.Font = Enum.Font.GothamSemibold
         tabBtn.TextSize = 15
         tabBtn.TextXAlignment = Enum.TextXAlignment.Left
         tabBtn.AutoButtonColor = false
-        tabBtn.Parent = sg
+        tabBtn.Parent = TabScroll
 
         local btnC = Instance.new("UICorner")
         btnC.CornerRadius = UDim.new(0, 12)
         btnC.Parent = tabBtn
 
         local tabContent = Instance.new("ScrollingFrame")
-        tabContent.Size = UDim2.new(1, 0, 1, -54)
-        tabContent.Position = UDim2.new(0, 0, 0, 54)
+        tabContent.Size = UDim2.new(1, 0, 1, 0)
         tabContent.BackgroundTransparency = 1
         tabContent.ScrollBarThickness = 4
         tabContent.ScrollBarImageColor3 = Color3.fromRGB(80, 100, 180)
         tabContent.Visible = false
-        tabContent.Parent = Main
+        tabContent.Parent = Content
 
         local layout = Instance.new("UIListLayout")
         layout.Padding = UDim.new(0, 18)
@@ -261,21 +342,30 @@ function TolikUI:CreateWindow(title)
         local function activate()
             if CurrentTab then
                 CurrentTab.content.Visible = false
-                TS:Create(CurrentTab.btn, TweenInfo.new(0.35), {
-                    BackgroundColor3 = Color3.fromRGB(22, 22, 34),
-                    TextColor3 = Color3.fromRGB(180, 190, 220)
-                }):Play()
+                TS:Create(CurrentTab.btn, TweenInfo.new(0.35), {BackgroundColor3 = Color3.fromRGB(22, 22, 34), TextColor3 = Color3.fromRGB(180, 190, 220)}):Play()
             end
             tabContent.Visible = true
-            TS:Create(tabBtn, TweenInfo.new(0.35), {
-                BackgroundColor3 = Color3.fromRGB(60, 100, 200),
-                TextColor3 = Color3.fromRGB(255, 255, 255)
-            }):Play()
+            TS:Create(tabBtn, TweenInfo.new(0.35), {BackgroundColor3 = Color3.fromRGB(60, 100, 200), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
             CurrentTab = {btn = tabBtn, content = tabContent}
         end
 
         tabBtn.MouseButton1Click:Connect(activate)
         if not CurrentTab then activate() end
+
+        function tab:Button(name, callback)
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1, -40, 0, 50)
+            btn.BackgroundColor3 = Color3.fromRGB(80, 140, 255)
+            btn.Text = name
+            btn.TextColor3 = Color3.new(1,1,1)
+            btn.Font = Enum.Font.GothamBold
+            btn.TextSize = 15
+            btn.Parent = tabContent
+            local c = Instance.new("UICorner")
+            c.CornerRadius = UDim.new(0, 10)
+            c.Parent = btn
+            btn.MouseButton1Click:Connect(callback or function() end)
+        end
 
         function tab:Toggle(name, default, callback)
             local tog = Instance.new("TextButton")
@@ -365,23 +455,6 @@ function TolikUI:CreateWindow(title)
                     valueLabel.Text = tostring(val)
                     if callback then callback(val) end
                 end
-            end)
-        end
-
-        function tab:Button(name, callback)
-            local btn = Instance.new("TextButton")
-            btn.Size = UDim2.new(1, -40, 0, 50)
-            btn.BackgroundColor3 = Color3.fromRGB(80, 140, 255)
-            btn.Text = name
-            btn.TextColor3 = Color3.new(1,1,1)
-            btn.Font = Enum.Font.GothamBold
-            btn.TextSize = 15
-            btn.Parent = tabContent
-            local c = Instance.new("UICorner")
-            c.CornerRadius = UDim.new(0, 10)
-            c.Parent = btn
-            btn.MouseButton1Click:Connect(function()
-                if callback then callback() end
             end)
         end
 
