@@ -128,20 +128,6 @@ function TolikUI:CreateWindow(options)
     Main.Visible = false  -- скрыто до ключа
     Main.Parent = sg
 
-local opened = false
-local unlocked = not keySystem
-
-local function toggleMain()
-    if not unlocked then return end
-    opened = not opened
-    Main.Visible = opened
-end
-
-IconWrapper.ZIndex = 50
-Icon.ZIndex = 51
-
-Icon.MouseButton1Click:Connect(toggleMain)
-
     local MainCorner = Instance.new("UICorner")
     MainCorner.CornerRadius = UDim.new(0, 20)
     MainCorner.Parent = Main
